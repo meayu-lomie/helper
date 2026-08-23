@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react'
-import { useShortcutsStore } from '@/lib/store/shortcuts'
+import { useEffect, useRef, useState } from 'react'
 import { useSolutionStore } from '@/lib/store/solution'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
-import ShortcutRenderer from '@/components/ShortcutRenderer'
 
 const SCROLL_OFFSET = 120
+/** 距底部小于该值视为"贴底"，流式输出时自动跟随 */
+const PINNED_THRESHOLD = 40
 
 export function AppContent() {
   const {
+    isLoading,
     screenshotData,
     solutionChunks,
     errorMessage,
@@ -19,6 +20,14 @@ export function AppContent() {
   } = useSolutionStore()
 
   const [recentScreenshots, setRecentScreenshots] = useState<string[]>([])
+
+  // 流式期间渲染 Markdown（节流合并、暂不高亮），结束后再做一次完整解析高亮
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [streamingText, setStreamingText] = useState('')
+
+  const contentRef = useRef<HTMLDivElement>(null)
+  /** 用户是否停留在底部；一旦手动上滚查看就暂停自动跟随 */
+  const isPinnedRef = useRef(true)
 
   useEffect(() => {
     // Listen for screenshot events (latest)
@@ -37,6 +46,8 @@ export function AppContent() {
       setRecentScreenshots([])
       setScreenshotData(null)
       setErrorMessage(null)
+      setIsStreaming(false)
+      setStreamingText('')
     })
 
     // Listen for solution chunks
@@ -48,6 +59,8 @@ export function AppContent() {
     window.api.onAiLoadingStart(() => {
       setIsLoading(true)
       setErrorMessage(null) // Clear error when new request starts
+      setIsStreaming(true)
+      setStreamingText(useSolutionStore.getState().solutionChunks.join(''))
     })
     window.api.onAiLoadingEnd(() => {
       setIsLoading(false)
@@ -64,15 +77,48 @@ export function AppContent() {
     }
   }, [setScreenshotData, clearSolution, setIsLoading, addSolutionChunk, setErrorMessage])
 
+  // 流式期间按固定间隔从 store 读取增量文本，节流轻量渲染
   useEffect(() => {
-    window.api.onSolutionComplete(() => {
+    if (!isStreaming) return
+    const id = setInterval(() => {
+      setStreamingText(useSolutionStore.getState().solutionChunks.join(''))
+    }, 100)
+    return () => clearInterval(id)
+  }, [isStreaming])
+
+  // 追踪用户是否贴底，流式期间贴底则自动跟随滚动
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el) return
+    const onScroll = () => {
+      const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+      isPinnedRef.current = distanceToBottom < PINNED_THRESHOLD
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    if (!isStreaming || !isPinnedRef.current) return
+    const el = contentRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [isStreaming, streamingText])
+
+  useEffect(() => {
+    const finishStreaming = () => {
       setIsLoading(false)
+      setIsStreaming(false)
+      // 结束前同步一次完整文本，保证与 store 内容一致后切回完整 Markdown 渲染
+      setStreamingText(useSolutionStore.getState().solutionChunks.join(''))
+    }
+    window.api.onSolutionComplete(() => {
+      finishStreaming()
     })
     window.api.onSolutionStopped(() => {
-      setIsLoading(false)
+      finishStreaming()
     })
     window.api.onSolutionError((message: string) => {
-      setIsLoading(false)
+      finishStreaming()
       setErrorMessage(message)
     })
     return () => {
@@ -111,7 +157,16 @@ export function AppContent() {
   }, [])
 
   return (
-    <div id="app-content" className="px-6 py-4">
+    <div id="app-content" ref={contentRef} className="px-6 py-4">
+      {/* 等待模型首 token：三点思考动画 */}
+      {isLoading && !streamingText.trim() && (
+        <div className="thinking-dots mb-4" role="status" aria-label="正在思考">
+          <span />
+          <span />
+          <span />
+        </div>
+      )}
+
       {/* Error Banner */}
       {errorMessage && (
         <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg flex items-start gap-3">
@@ -149,47 +204,39 @@ export function AppContent() {
         </div>
       )}
 
-      {/* Screenshot Gallery */}
+      {/*
+       * Screenshot Gallery：不渲染真实截图内容，仅用字母占位标记数量，
+       * 避免题目截图出现在助手窗口中
+       */}
       {recentScreenshots.length > 0 ? (
-        <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
-          {recentScreenshots.map((data, index) => (
-            <img
+        <div className="mb-4 flex gap-2">
+          {recentScreenshots.map((_, index) => (
+            <span
               key={index}
-              src={`data:image/png;base64,${data}`}
-              alt={`Screenshot ${index + 1}`}
-              className="w-40 h-auto flex-shrink-0 border border-gray-600 rounded-lg shadow-lg hover:shadow-xl transition-shadow"
               title={`第 ${index + 1} 张截图`}
-            />
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3e3e42] bg-card text-xs text-muted-foreground select-none"
+            >
+              {String.fromCharCode(97 + (index % 26))}
+            </span>
           ))}
         </div>
       ) : screenshotData ? (
         <div className="mb-4">
-          <img
-            src={`data:image/png;base64,${screenshotData}`}
-            alt="Screenshot"
-            className="w-40 h-auto border border-gray-600 rounded-lg shadow-lg"
-          />
+          <span
+            title="已截取 1 张截图"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3e3e42] bg-card text-xs text-muted-foreground select-none"
+          >
+            a
+          </span>
         </div>
+      ) : null}
+
+      {/* Solution Display: 流式期间节流渲染 Markdown（暂不高亮），结束后完整渲染 + 高亮 */}
+      {isStreaming ? (
+        <MarkdownRenderer highlight={false}>{streamingText}</MarkdownRenderer>
       ) : (
-        <ShortcutTip />
+        <MarkdownRenderer>{solutionChunks.join('')}</MarkdownRenderer>
       )}
-
-      {/* Solution Display */}
-      <MarkdownRenderer>{solutionChunks.join('')}</MarkdownRenderer>
-    </div>
-  )
-}
-
-function ShortcutTip() {
-  const { shortcuts } = useShortcutsStore()
-  return (
-    <div className="flex items-center justify-center h-full text-xl text-gray-400 select-none">
-      请按下快捷键
-      <ShortcutRenderer
-        shortcut={shortcuts.takeScreenshot.key}
-        className="mx-1 font-bold text-black"
-      />
-      抓取屏幕进行分析
     </div>
   )
 }

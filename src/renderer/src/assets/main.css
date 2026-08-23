@@ -10,7 +10,7 @@
 }
 
 #app-header {
-  @apply h-9 bg-gray-700/80 text-white;
+  @apply h-9 bg-[#3c3c3c]/80 text-white;
   -webkit-app-region: drag;
   .actions {
     -webkit-app-region: no-drag;
@@ -18,7 +18,49 @@
 }
 
 #app-content {
-  @apply h-[calc(100vh-36px)] overflow-y-auto bg-gray-500;
+  @apply h-[calc(100vh-36px)] overflow-y-auto bg-[#1e1e1e];
+}
+
+/* 深色细滚动条，与转录条样式一致 */
+#app-content::-webkit-scrollbar {
+  width: 6px;
+}
+#app-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+#app-content::-webkit-scrollbar-thumb {
+  background: #3e3e42;
+  border-radius: 3px;
+}
+#app-content::-webkit-scrollbar-thumb:hover {
+  background: #4f4f52;
+}
+
+/* 等待模型首 token 的思考动画：三点依次明暗 */
+.thinking-dots {
+  @apply inline-flex items-center gap-1.5 text-sm text-muted-foreground select-none;
+}
+.thinking-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: thinking-pulse 1.2s ease-in-out infinite;
+}
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes thinking-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .transcription-scroll {
@@ -41,8 +83,29 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+/*
+ * 与代码高亮主题（vs2015 / VS Code Dark+）同色系分层：
+ * 页面 #1e1e1e（编辑器背景）、代码块 #252526（侧栏色，亮一档）、边框 #3e3e42。
+ * 窄窗口时代码自动折行（保留缩进），超长 token 也可断开。
+ */
+.prose pre {
+  background-color: #252526;
+  border: 1px solid #3e3e42;
+  border-radius: 0.5rem;
+  overflow-x: hidden;
+}
+
+.prose pre code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.prose :not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
 .overlay-toolbar {
-  @apply flex h-[52px] items-center gap-1 rounded-md bg-gray-700/80 p-2 text-white;
+  @apply flex h-[52px] items-center gap-1 rounded-md bg-[#3c3c3c]/80 p-2 text-white;
   -webkit-app-region: no-drag;
 }
 

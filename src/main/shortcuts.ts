@@ -80,6 +80,34 @@ interface StreamContext {
 
 let currentStreamContext: StreamContext | null = null
 
+/**
+ * 聚合流式分块，按固定间隔批量经 IPC 发送，避免逐 token 的高频小消息
+ * 加重渲染进程负担。`flush` 在流结束时同步发出剩余文本。
+ */
+function createChunkFlusher(send: (text: string) => void, intervalMs = 80) {
+  let buffer = ''
+  let timer: NodeJS.Timeout | null = null
+  const flush = (): void => {
+    if (timer) {
+      clearTimeout(timer)
+      timer = null
+    }
+    if (buffer) {
+      send(buffer)
+      buffer = ''
+    }
+  }
+  return {
+    push(text: string): void {
+      buffer += text
+      if (!timer) {
+        timer = setTimeout(flush, intervalMs)
+      }
+    },
+    flush
+  }
+}
+
 // Conversation history tracking
 let conversationMessages: ModelMessage[] = []
 let recentScreenshots: string[] = [] // 最近截图，水平预览 (限5张)
@@ -317,6 +345,9 @@ const callbacks: Record<string, () => void> = {
       let endedNaturally = true
       let streamStarted = false
       let assistantResponse = ''
+      const flusher = createChunkFlusher((text) => {
+        mainWindow.webContents.send('solution-chunk', text)
+      })
       try {
         const solutionStream = getSolutionStream(
           conversationMessages,
@@ -330,7 +361,7 @@ const callbacks: Record<string, () => void> = {
               break
             }
             assistantResponse += chunk
-            mainWindow.webContents.send('solution-chunk', chunk)
+            flusher.push(chunk)
           }
         } catch (error) {
           if (!streamContext.controller.signal.aborted) {
@@ -341,6 +372,8 @@ const callbacks: Record<string, () => void> = {
             endedNaturally = false
           }
         }
+
+        flusher.flush()
 
         if (streamContext.controller.signal.aborted) {
           if (streamContext.reason === 'user') {
@@ -442,6 +475,9 @@ const callbacks: Record<string, () => void> = {
       let endedNaturally = true
       let streamStarted = false
       let assistantResponse = ''
+      const flusher = createChunkFlusher((text) => {
+        mainWindow.webContents.send('solution-chunk', text)
+      })
       try {
         const solutionStream = getGeneralStream(
           conversationMessages,
@@ -455,7 +491,7 @@ const callbacks: Record<string, () => void> = {
               break
             }
             assistantResponse += chunk
-            mainWindow.webContents.send('solution-chunk', chunk)
+            flusher.push(chunk)
           }
         } catch (error) {
           if (!streamContext.controller.signal.aborted) {
@@ -466,6 +502,8 @@ const callbacks: Record<string, () => void> = {
             endedNaturally = false
           }
         }
+
+        flusher.flush()
 
         if (streamContext.controller.signal.aborted) {
           if (streamContext.reason === 'user') {
@@ -715,6 +753,9 @@ ipcMain.handle('sendFollowUpQuestion', async (_event, question: string) => {
   let streamStarted = false
   let assistantResponse = ''
 
+  const flusher = createChunkFlusher((text) => {
+    mainWindow.webContents.send('solution-chunk', text)
+  })
   try {
     const followUpStream = getFollowUpStream(
       conversationMessages,
@@ -730,7 +771,7 @@ ipcMain.handle('sendFollowUpQuestion', async (_event, question: string) => {
           break
         }
         assistantResponse += chunk
-        mainWindow.webContents.send('solution-chunk', chunk)
+        flusher.push(chunk)
       }
     } catch (error) {
       if (!streamContext.controller.signal.aborted) {
@@ -741,6 +782,8 @@ ipcMain.handle('sendFollowUpQuestion', async (_event, question: string) => {
         endedNaturally = false
       }
     }
+
+    flusher.flush()
 
     if (streamContext.controller.signal.aborted) {
       if (streamContext.reason === 'user') {

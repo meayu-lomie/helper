@@ -133,7 +133,7 @@ export default function SettingsPage() {
       {/* Settings Content */}
       <div id="app-content" className="flex flex-col gap-4 p-8">
         {/* AI Settings */}
-        <div className="bg-gray-300/80 rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <Bot className="h-5 w-5 mr-2" />
             AI 设置
@@ -151,7 +151,7 @@ export default function SettingsPage() {
                 type="text"
                 value={apiBaseURL}
                 onChange={(e) => updateSetting('apiBaseURL', e.target.value)}
-                className="w-60 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-60 px-3 py-2 border border-border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="可为空，默认使用 OpenAI 的 API"
               />
             </div>
@@ -163,7 +163,7 @@ export default function SettingsPage() {
                   type={showApiKey ? 'text' : 'password'}
                   value={apiKey}
                   onChange={(e) => updateSetting('apiKey', e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 border border-border rounded-l-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="输入 API Key"
                 />
                 <Button
@@ -189,7 +189,7 @@ export default function SettingsPage() {
           </div>
         </div>
         {/* Transcription Settings */}
-        <div className="bg-gray-300/80 rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <Mic className="h-5 w-5 mr-2" />
             语音转录
@@ -205,7 +205,7 @@ export default function SettingsPage() {
                     href="https://bailian.console.aliyun.com/cn-beijing?tab=model#/api-key"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-0.5 text-blue-700 hover:underline"
+                    className="px-0.5 text-blue-400 hover:underline"
                   >
                     百炼平台
                   </a>
@@ -217,7 +217,7 @@ export default function SettingsPage() {
                   type={showDashscopeApiKey ? 'text' : 'password'}
                   value={dashscopeApiKey}
                   onChange={(e) => updateSetting('dashscopeApiKey', e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 border border-border rounded-l-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="输入百炼平台 API Key"
                 />
                 <Button
@@ -246,7 +246,7 @@ export default function SettingsPage() {
                   updateSetting('audioInputDeviceId', val === 'system' ? '' : val)
                 }
               >
-                <SelectTrigger className="w-60 bg-white">
+                <SelectTrigger className="w-60">
                   <SelectValue placeholder="系统音频（默认）" />
                 </SelectTrigger>
                 <SelectContent>
@@ -273,7 +273,7 @@ export default function SettingsPage() {
                   updateSetting('audioOutputDeviceId', val === 'default' ? '' : val)
                 }
               >
-                <SelectTrigger className="w-60 bg-white">
+                <SelectTrigger className="w-60">
                   <SelectValue placeholder="默认设备" />
                 </SelectTrigger>
                 <SelectContent>
@@ -290,7 +290,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-        <div className="bg-gray-300/80 rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <SquareTerminal className="h-5 w-5 mr-2" />
             解题设置
@@ -312,7 +312,7 @@ export default function SettingsPage() {
                       'group flex items-center rounded-full border text-sm transition-colors cursor-pointer select-none',
                       scene.id === activeSceneId
                         ? 'bg-blue-600 border-blue-600 text-white'
-                        : 'bg-white border-gray-300 hover:border-blue-400'
+                        : 'bg-background border-border hover:border-ring'
                     )}
                     onClick={() => setActiveScene(scene.id)}
                   >
@@ -321,7 +321,7 @@ export default function SettingsPage() {
                     </span>
                     {!scene.isPreset && (
                       <button
-                        className="mr-1.5 p-0.5 rounded-full opacity-60 hover:opacity-100 hover:bg-black/10"
+                        className="mr-1.5 p-0.5 rounded-full opacity-60 hover:opacity-100 hover:bg-white/10"
                         title="删除该场景"
                         onClick={(e) => {
                           e.stopPropagation()
@@ -334,7 +334,7 @@ export default function SettingsPage() {
                   </div>
                 ))}
                 <button
-                  className="flex items-center gap-1 rounded-full border border-dashed border-gray-400 bg-transparent px-3 py-1 text-sm text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-1 rounded-full border border-dashed border-border bg-transparent px-3 py-1 text-sm text-muted-foreground hover:border-ring hover:text-primary transition-colors"
                   onClick={() => setAddSceneOpen(true)}
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -352,7 +352,7 @@ export default function SettingsPage() {
                   </label>
                   {activeScene.isPreset && (
                     <button
-                      className="flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900 transition-colors"
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                       title="恢复该场景的默认提示词"
                       onClick={handleResetScenePrompt}
                     >
@@ -365,7 +365,7 @@ export default function SettingsPage() {
                   value={activeScene.prompt}
                   onChange={(e) => updateScenePrompt(activeScene.id, e.target.value)}
                   placeholder="请输入该场景的系统提示词, 示例: 你是一个解题助手, 请根据「截图」和「语音转录内容」给出相关回答。"
-                  className="w-full min-h-24 max-h-100 bg-white"
+                  className="w-full min-h-24 max-h-100"
                   rows={6}
                 />
               </div>
@@ -428,7 +428,7 @@ export default function SettingsPage() {
         </Dialog>
 
         {/* Appearance Settings */}
-        <div className="bg-gray-300/80 rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <Palette className="h-5 w-5 mr-2" />
             外观设置
@@ -484,7 +484,7 @@ export default function SettingsPage() {
                   value={String(toolbarHoverDelay)}
                   onValueChange={(val) => updateSetting('toolbarHoverDelay', Number(val))}
                 >
-                  <SelectTrigger className="w-60 bg-white">
+                  <SelectTrigger className="w-60">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -500,7 +500,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Shortcuts Settings */}
-        <div className="bg-gray-300/80 rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <Keyboard className="h-5 w-5 mr-2" />
             快捷键设置
@@ -513,7 +513,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Screenshot Save Settings */}
-        <div className="bg-gray-300/80 rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <FolderOpen className="h-5 w-5 mr-2" />
             保存截图
@@ -542,7 +542,7 @@ export default function SettingsPage() {
                   </span>
                 </label>
                 <button
-                  className="text-xs text-gray-600 max-w-48 truncate hover:text-gray-900 cursor-pointer transition-colors"
+                  className="text-xs text-muted-foreground max-w-48 truncate hover:text-foreground cursor-pointer transition-colors"
                   title="点击选择保存目录"
                   onClick={async () => {
                     const dir = await window.api.selectScreenshotDir()
@@ -557,7 +557,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Privacy Settings */}
-        <div className="bg-gray-300/80 rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <Shield className="h-5 w-5 mr-2" />
             隐私设置

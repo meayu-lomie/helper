@@ -9,8 +9,7 @@ export function AppHeader() {
 
   return (
     <div id="app-header" className="flex items-center text-white">
-      <div className="mx-auto">截屏解题助手</div>
-      <div className={`actions ${ignoreMouse ? 'pointer-events-none' : ''}`}>
+      <div className={`actions ml-auto ${ignoreMouse ? 'pointer-events-none' : ''}`}>
         <Button
           variant="ghost"
           className="size-8 cursor-pointer hover:opacity-50"

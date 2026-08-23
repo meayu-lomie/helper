@@ -27,9 +27,9 @@ export function PrerequisitesChecker() {
 
   return (
     <div className="fixed top-9 left-0 right-0 bottom-0 flex bg-black/50">
-      <div className="m-auto bg-white rounded-lg p-6 pt-1 w-120 shadow-lg">
+      <div className="m-auto bg-card border border-border rounded-lg p-6 pt-1 w-120 shadow-lg">
         <h1 className="text-xl font-bold text-center mb-2">欢迎使用截屏解题助手</h1>
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-muted-foreground">
           请先配置大模型聚合平台信息，如国内的
           <a
             href="https://cloud.siliconflow.cn/i/SG8C0772"
@@ -53,9 +53,9 @@ export function PrerequisitesChecker() {
 
         <div className="space-y-2 my-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium">
               API Base URL{' '}
-              <span className="text-xs font-normal text-gray-500">
+              <span className="text-xs font-normal text-muted-foreground">
                 (配置硅基流动或其他代理服务商的 API Base URL 地址)
               </span>
             </label>
@@ -63,19 +63,19 @@ export function PrerequisitesChecker() {
               type="text"
               value={inputApiBaseURL}
               onChange={(e) => setInputApiBaseURL(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="https://api.openai.com/v1"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">API Key</label>
+            <label className="block text-sm font-medium">API Key</label>
             <div className="flex">
               <input
                 type={showApiKey ? 'text' : 'password'}
                 value={inputApiKey}
                 onChange={(e) => setInputApiKey(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-border rounded-l-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="请输入 API Key"
               />
               <Button

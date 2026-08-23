@@ -35,22 +35,22 @@ export default function HelpPage() {
       <div id="app-content" className="flex flex-col gap-4 p-8">
         {/* Introduction */}
         <HelpSection Icon={Info} title="简介">
-          <p className="text-gray-700">
+          <p className="text-muted-foreground">
             欢迎使用截屏解题助手！无论是 编程面试 / 在线考试 还是其他解题场景，
             该工具都可以帮助您快速截图，分析屏幕内容，并给出解答建议。 您可以访问本项目{' '}
             <a
               href="https://github.com/ooboqoo/interview-coder-cn/wiki"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+              className="inline-flex items-center gap-1 text-blue-400 hover:underline"
             >
               GitHub Wiki
             </a>{' '}
             获取更多帮助信息（如隐身相关配置、API Key 申请等）。
           </p>
-          <div className="bg-gray-700/10 rounded-lg p-4">
+          <div className="bg-background rounded-lg p-4">
             <h3 className="font-semibold mb-2">主要功能：</h3>
-            <ul className="space-y-1 text-gray-700 list-disc list-inside">
+            <ul className="space-y-1 text-muted-foreground list-disc list-inside">
               <li className="flex gap-2">
                 <Camera className="h-6 w-4" />
                 <span>通过快捷键快速截图，并生成解题建议。</span>
@@ -73,17 +73,17 @@ export default function HelpPage() {
 
         {/* Quick Start */}
         <HelpSection Icon={Lightbulb} title="快速开始">
-          <div className="border border-gray-400 rounded-lg p-4">
+          <div className="border border-border rounded-lg p-4">
             <h3 className="font-semibold mb-2">1. 截取屏幕截图</h3>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-muted-foreground">
               当您需要分析某个问题时，按下快捷键{' '}
               <ShortcutRenderer shortcut={`${platformAlt}+Enter`} className="text-xs mx-1" />
               截取当前屏幕。截图会立即显示在应用中。
             </p>
           </div>
-          <div className="border border-gray-400 rounded-lg p-4">
+          <div className="border border-border rounded-lg p-4">
             <h3 className="font-semibold mb-2">2. 查看结果</h3>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-muted-foreground">
               截图完成后，系统会根据当前选择的提示词场景自动分析内容，给出解题思路和答案。
             </p>
           </div>
@@ -100,17 +100,17 @@ export default function HelpPage() {
 
         {/* Contact Support */}
         <HelpSection Icon={MessageCircle} title="联系支持">
-          <p className="text-gray-700">如果您遇到问题或有建议，请通过以下方式联系我们：</p>
+          <p className="text-muted-foreground">如果您遇到问题或有建议，请通过以下方式联系我们：</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="border border-gray-400 rounded-lg p-4">
+            <div className="border border-border rounded-lg p-4">
               <h3 className="font-semibold mb-2 ">GitHub Issues</h3>
-              <p className="text-gray-700">
+              <p className="text-muted-foreground">
                 在{' '}
                 <a
                   href="https://github.com/ooboqoo/interview-coder-cn/issues"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-blue-600 hover:underline"
+                  className="text-blue-400 hover:underline"
                 >
                   GitHub Issues
                 </a>{' '}

@@ -12,7 +12,7 @@ function generateFilename(): string {
   const pad = (n: number, len = 2) => String(n).padStart(len, '0')
   const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`
   const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`
-  return `${date}_${time}.png`
+  return `${date}_${time}.jpg`
 }
 
 export async function saveScreenshotToDisk(base64Data: string): Promise<void> {

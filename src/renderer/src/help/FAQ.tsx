@@ -33,7 +33,7 @@ const faqs = [
           href="https://github.com/ooboqoo/interview-coder-cn/wiki/隐身配置"
           target="_blank"
           rel="noreferrer"
-          className="text-blue-600 hover:underline"
+          className="text-blue-400 hover:underline"
         >
           GitHub Wiki
         </a>
@@ -88,9 +88,9 @@ export function FAQ() {
   return (
     <HelpSection Icon={BookOpen} title="常见问题">
       {faqs.map((faq, index) => (
-        <div key={index} className="border border-gray-400 rounded-lg p-4">
+        <div key={index} className="border border-border rounded-lg p-4">
           <h3 className="font-semibold mb-2">{faq.question}</h3>
-          <p className="text-sm text-gray-700">{faq.answer}</p>
+          <p className="text-sm text-muted-foreground">{faq.answer}</p>
         </div>
       ))}
     </HelpSection>
