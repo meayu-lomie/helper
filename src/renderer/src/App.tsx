@@ -8,11 +8,19 @@ import { OverlayToolbar } from '@/coder/OverlayToolbar'
 import { useSettingsStore } from '@/lib/store/settings'
 import { useShortcutsStore } from '@/lib/store/shortcuts'
 import { getCloneableFields } from '@/lib/utils'
+import { applyTheme } from '@/lib/themes'
 
 export default function App() {
   const [initialized, setInitialized] = useState(false)
   const settingsStore = useSettingsStore()
+  const themeId = useSettingsStore((state) => state.themeId)
+  const customThemeColors = useSettingsStore((state) => state.customThemeColors)
   const { shortcuts } = useShortcutsStore()
+
+  // 主题变化即时生效（含首次挂载）
+  useEffect(() => {
+    applyTheme(themeId, customThemeColors)
+  }, [themeId, customThemeColors])
 
   useEffect(() => {
     window.api.getAppSettings().then((settings) => {

@@ -214,7 +214,7 @@ export function AppContent() {
             <span
               key={index}
               title={`第 ${index + 1} 张截图`}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3e3e42] bg-card text-xs text-muted-foreground select-none"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card text-xs text-muted-foreground select-none"
             >
               {String.fromCharCode(97 + (index % 26))}
             </span>
@@ -224,7 +224,7 @@ export function AppContent() {
         <div className="mb-4">
           <span
             title="已截取 1 张截图"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3e3e42] bg-card text-xs text-muted-foreground select-none"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card text-xs text-muted-foreground select-none"
           >
             a
           </span>

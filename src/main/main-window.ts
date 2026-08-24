@@ -17,8 +17,9 @@ export function applyContentProtection(window: BrowserWindow, forceReset = false
 export function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    // 手机竖屏比例的窄长窗口，适合贴边悬浮使用
+    width: 420,
+    height: 800,
     title: '',
     frame: false,
     transparent: true,

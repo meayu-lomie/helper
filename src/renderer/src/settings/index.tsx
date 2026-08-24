@@ -36,7 +36,17 @@ import {
   OPACITY_MAX,
   OPACITY_STEP
 } from '@/lib/store/settings'
+import { THEMES, type ThemeColors } from '@/lib/themes'
 import { isMac } from '@/lib/utils/env'
+
+/** 自定义色板暴露的核心颜色项 */
+const CUSTOM_COLOR_KEYS: Array<{ key: keyof ThemeColors; label: string }> = [
+  { key: 'background', label: '背景' },
+  { key: 'card', label: '卡片' },
+  { key: 'border', label: '边框' },
+  { key: 'foreground', label: '文字' },
+  { key: 'primary', label: '主色' }
+]
 import { SelectModel } from './SelectModel'
 import { CustomShortcuts, ResetDefaultShortcuts } from './CustomShortcuts'
 import {
@@ -63,6 +73,8 @@ export default function SettingsPage() {
     audioInputDeviceId,
     audioOutputDeviceId,
     hideDockIcon,
+    themeId,
+    customThemeColors,
     updateSetting,
     setActiveScene,
     updateScenePrompt,
@@ -77,8 +89,60 @@ export default function SettingsPage() {
 
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([])
 
+  const [testingConnection, setTestingConnection] = useState(false)
+  const [connectionResult, setConnectionResult] = useState<{
+    ok: boolean
+    message: string
+  } | null>(null)
+
   const activeScene = scenes.find((s) => s.id === activeSceneId)
   const deletingScene = scenes.find((s) => s.id === sceneToDelete)
+
+  const handleTestConnection = async () => {
+    setTestingConnection(true)
+    setConnectionResult(null)
+    try {
+      const res = await window.api.testConnection()
+      if (!res.ok) {
+        setConnectionResult({ ok: false, message: res.error || '连接失败' })
+        return
+      }
+      const count = res.models?.length ?? 0
+      let message = count > 0 ? `连接成功，可用模型 ${count} 个` : '连接成功'
+      if (model.trim() && count > 0 && !res.models!.includes(model.trim())) {
+        message += '；注意：当前配置的模型不在列表中'
+      }
+      if (count > 0) {
+        // 拉到的模型填入模型下拉框
+        updateSetting('serverModels', res.models!)
+      }
+      setConnectionResult({ ok: true, message })
+    } catch (error) {
+      setConnectionResult({
+        ok: false,
+        message: error instanceof Error ? error.message : String(error)
+      })
+    } finally {
+      setTestingConnection(false)
+    }
+  }
+
+  /** 自定义颜色输入框的当前值：优先用户自定义，否则取所选主题的默认值 */
+  const themeColorValue = (key: keyof ThemeColors): string => {
+    const custom = customThemeColors[key]
+    if (custom) return custom
+    return THEMES.find((t) => t.id === themeId)?.colors[key] ?? '#000000'
+  }
+
+  const handleCustomColorChange = (key: keyof ThemeColors, value: string) => {
+    updateSetting('customThemeColors', { ...customThemeColors, [key]: value })
+  }
+
+  const resetCustomColors = () => {
+    updateSetting('customThemeColors', {})
+  }
+
+  const customColorCount = Object.keys(customThemeColors).length
 
   useEffect(() => {
     return () => {
@@ -185,6 +249,33 @@ export default function SettingsPage() {
                 </span>
               </label>
               <SelectModel value={model} onChange={(val) => updateSetting('model', val)} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">
+                连接测试
+                <span className="ml-2 text-xs font-light">验证 API 地址与 Key 是否可用，不消耗 token</span>
+              </label>
+              <div className="flex items-center gap-3">
+                {connectionResult && (
+                  <span
+                    className={cn(
+                      'text-xs max-w-72 text-right break-all',
+                      connectionResult.ok ? 'text-green-500' : 'text-red-400'
+                    )}
+                  >
+                    {connectionResult.message}
+                  </span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={testingConnection}
+                  onClick={handleTestConnection}
+                >
+                  {testingConnection ? '测试中...' : '测试连接'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -435,6 +526,56 @@ export default function SettingsPage() {
           </h2>
 
           <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">
+                界面主题
+                <span className="ml-2 text-xs font-light">内置暗色与浅色主题，代码高亮自动匹配</span>
+              </label>
+              <Select value={themeId} onValueChange={(val) => updateSetting('themeId', val)}>
+                <SelectTrigger className="w-60">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {THEMES.map((theme) => (
+                    <SelectItem key={theme.id} value={theme.id}>
+                      {theme.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">
+                自定义颜色
+                <span className="ml-2 text-xs font-light">
+                  在当前主题基础上微调，仅修改过的项生效；切换主题后仍保留
+                </span>
+              </label>
+              <div className="flex items-end gap-3">
+                {CUSTOM_COLOR_KEYS.map(({ key, label }) => (
+                  <label
+                    key={key}
+                    className="flex flex-col items-center gap-1 cursor-pointer"
+                    title={`自定义${label}`}
+                  >
+                    <input
+                      type="color"
+                      value={themeColorValue(key)}
+                      onChange={(e) => handleCustomColorChange(key, e.target.value)}
+                      className="h-7 w-10 rounded border border-border bg-transparent cursor-pointer"
+                    />
+                    <span className="text-[10px] text-muted-foreground">{label}</span>
+                  </label>
+                ))}
+                {customColorCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={resetCustomColors}>
+                    重置
+                  </Button>
+                )}
+              </div>
+            </div>
+
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium">
                 窗口透明度

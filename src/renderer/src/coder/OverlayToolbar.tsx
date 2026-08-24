@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { TOOLBAR_ACTIONS, type ToolbarActionName } from '@/lib/toolbar-actions'
+import { applyTheme } from '@/lib/themes'
 import type { LucideIcon } from 'lucide-react'
 
 /**
@@ -11,13 +12,21 @@ import type { LucideIcon } from 'lucide-react'
 export function OverlayToolbar() {
   const [hoverDelay, setHoverDelay] = useState(0)
 
-  // This window has its own settings store copy, so main pushes the live value
+  // This window has its own settings store copy, so main pushes the live value.
+  // 主题经此通道同步：直接应用而不写入 store —— 写 store 会触发全量设置上报，
+  // 主进程再次推送，形成无限循环（表现为工具条不停闪烁）
   useEffect(() => {
     window.api.getAppSettings().then((settings) => {
       setHoverDelay(settings.toolbarHoverDelay || 0)
+      if (settings.themeId) {
+        applyTheme(settings.themeId, settings.customThemeColors ?? {})
+      }
     })
-    window.api.onSyncToolbarSettings(({ hoverDelay }) => {
+    window.api.onSyncToolbarSettings(({ hoverDelay, themeId, customThemeColors }) => {
       setHoverDelay(hoverDelay || 0)
+      if (themeId) {
+        applyTheme(themeId, customThemeColors ?? {})
+      }
     })
     return () => {
       window.api.removeSyncToolbarSettingsListener()

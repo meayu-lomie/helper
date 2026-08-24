@@ -49,7 +49,7 @@ function CopyCodeButton({ getText }: { getText: () => string }) {
   return (
     <button
       onClick={handleCopy}
-      className="absolute top-1.5 right-1.5 z-10 h-6 px-2 rounded-md border border-[#3e3e42] bg-[#2d2d30] text-xs text-[#9a9a9a] hover:text-[#d4d4d4] transition-colors cursor-pointer select-none"
+      className="absolute top-1.5 right-1.5 z-10 h-6 px-2 rounded-md border border-border bg-secondary text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer select-none"
     >
       {copied ? '已复制' : '复制'}
     </button>

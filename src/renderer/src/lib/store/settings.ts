@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { ThemeColors } from '@/lib/themes'
 import codingPrompt from './prompts/coding.md?raw'
 import englishExamPrompt from './prompts/english-exam.md?raw'
 import generalQaPrompt from './prompts/general-qa.md?raw'
@@ -59,6 +60,8 @@ interface Settings {
   apiKey: string
   model: string
   customModels: string[]
+  /** 「测试连接」从服务端 /models 拉到的可用模型，填入模型下拉框 */
+  serverModels: string[]
   customPrompt: string
 
   scenes: PromptScene[]
@@ -69,6 +72,11 @@ interface Settings {
   showOverlayToolbar: boolean
   /** Dwell time in ms before hovering a toolbar button fires it; 0 disables hover triggering */
   toolbarHoverDelay: number
+
+  /** 内置主题 id（见 lib/themes.ts），自定义颜色叠加在其上 */
+  themeId: string
+  /** 用户在所选主题基础上微调的颜色，仅存被修改的项 */
+  customThemeColors: Partial<ThemeColors>
 
   screenshotAutoSave: boolean
   screenshotDir: string
@@ -97,6 +105,7 @@ const defaultSettings: Settings = {
   apiKey: '',
   model: '',
   customModels: [],
+  serverModels: [],
   customPrompt: PRESET_SCENE_PROMPTS[CODING_SCENE_ID],
   scenes: createPresetScenes(),
   activeSceneId: CODING_SCENE_ID,
@@ -104,6 +113,9 @@ const defaultSettings: Settings = {
   opacity: 0.8,
   showOverlayToolbar: true,
   toolbarHoverDelay: 1000,
+
+  themeId: 'vscode-dark',
+  customThemeColors: {},
 
   screenshotAutoSave: false,
   screenshotDir: '',
@@ -175,7 +187,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: 'interview-coder-settings',
-      version: 8,
+      version: 9,
       migrate: (persisted, version) => {
         const state = persisted as Partial<Settings>
         // Drop the legacy codeLanguage field (language now lives in the prompt text)
@@ -186,6 +198,11 @@ export const useSettingsStore = create<SettingsStore>()(
           if (state.toolbarHoverDelay === 800 || state.toolbarHoverDelay === 1200) {
             state.toolbarHoverDelay = 1000
           }
+        }
+        if (version < 9) {
+          // 主题字段为 v9 新增，旧数据补默认值（merge 阶段也会兜底）
+          state.themeId ??= 'vscode-dark'
+          state.customThemeColors ??= {}
         }
         if (version < 5) {
           // Convert the legacy free-form customPrompt into a custom scene

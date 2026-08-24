@@ -1,3 +1,4 @@
+import { ipcMain } from 'electron'
 import { streamText, type ModelMessage } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { settings, AppSettings } from './settings'
@@ -88,3 +89,45 @@ export function getGeneralStream(messages: ModelMessage[], abortSignal?: AbortSi
   })
   return textStream
 }
+
+export interface ConnectionTestResult {
+  ok: boolean
+  /** 服务端返回的模型 id 列表（成功时） */
+  models?: string[]
+  error?: string
+}
+
+/** 用 GET /models 验证 Base URL + API Key 连通性（不发对话请求，零 token 消耗） */
+export async function testModelConnection(): Promise<ConnectionTestResult> {
+  const baseURL = (settings.apiBaseURL || 'https://api.openai.com/v1').replace(/\/+$/, '')
+  if (!settings.apiKey) {
+    return { ok: false, error: '未配置 API Key' }
+  }
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 10000)
+  try {
+    const res = await fetch(`${baseURL}/models`, {
+      headers: { Authorization: `Bearer ${settings.apiKey}` },
+      signal: controller.signal
+    })
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      return { ok: false, error: `HTTP ${res.status}${body ? `：${body.slice(0, 200)}` : ''}` }
+    }
+    const data = (await res.json()) as { data?: Array<{ id?: string }> }
+    const models = Array.isArray(data?.data)
+      ? data.data.map((m) => m.id).filter((id): id is string => Boolean(id))
+      : []
+    return { ok: true, models }
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return { ok: false, error: '连接超时（10 秒）' }
+    }
+    return { ok: false, error: error instanceof Error ? error.message : String(error) }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+ipcMain.handle('testConnection', () => testModelConnection())

@@ -37,6 +37,14 @@
   --sidebar-accent-foreground: #d4d4d4;
   --sidebar-border: #3e3e42;
   --sidebar-ring: #007acc;
+
+  /* 扩展主题变量：标题栏 / 代码块 / 滚动条（默认值与 VS Code Dark+ 一致，运行时由 lib/themes.ts 覆盖） */
+  --header-bg: #3c3c3c;
+  --header-fg: #ffffff;
+  --code-bg: #252526;
+  --code-border: #3e3e42;
+  --scrollbar-thumb: #3e3e42;
+  --scrollbar-thumb-hover: #4f4f52;
 }
  
 @theme inline {

@@ -21,6 +21,13 @@ const defaultModels = [
   { value: 'gpt-5.5', label: 'gpt-5.5' }
 ]
 
+interface ModelItem {
+  value: string
+  label: string
+  isCustom?: boolean
+  group: 'server' | 'preset'
+}
+
 export function SelectModel({
   value,
   onChange,
@@ -34,13 +41,23 @@ export function SelectModel({
 }) {
   const [open, setOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
-  const { customModels, updateSetting } = useSettingsStore()
+  const { customModels, serverModels, updateSetting } = useSettingsStore()
 
   const models = useMemo(() => {
-    const customItems = customModels.map((m) => ({ value: m, label: m, isCustom: true }))
-    const defaultItems = defaultModels.map((m) => ({ ...m, isCustom: false }))
-    return [...customItems, ...defaultItems]
-  }, [customModels])
+    // 去重：服务端模型优先，其后是手动添加的自定义模型和预设列表
+    const items: ModelItem[] = [
+      ...serverModels.map((m) => ({ value: m, label: m, group: 'server' as const })),
+      ...customModels.map((m) => ({
+        value: m,
+        label: m,
+        isCustom: true,
+        group: 'preset' as const
+      })),
+      ...defaultModels.map((m) => ({ ...m, isCustom: false, group: 'preset' as const }))
+    ]
+    const seen = new Set<string>()
+    return items.filter((m) => (seen.has(m.value) ? false : (seen.add(m.value), true)))
+  }, [customModels, serverModels])
 
   const addCustomModel = (newModel: string) => {
     const newValue = newModel.trim()
@@ -69,8 +86,39 @@ export function SelectModel({
   }
 
   const filtered = models.filter((m) => m.label.toLowerCase().includes(searchValue.toLowerCase()))
+  const serverItems = filtered.filter((m) => m.group === 'server')
+  const presetItems = filtered.filter((m) => m.group === 'preset')
   const showCreate =
     searchValue && !filtered.some((m) => m.label.toLowerCase() === searchValue.toLowerCase())
+
+  const renderItem = (m: ModelItem) => (
+    <div key={m.value} className="group flex">
+      <CommandItem
+        value={m.value}
+        onSelect={(current) => {
+          onChange?.(current === value ? '' : current)
+          setSearchValue('')
+          setOpen(false)
+        }}
+        className="flex-1"
+      >
+        {m.label}
+        <Check
+          className={cn('ml-auto', value === m.value ? 'opacity-100' : 'opacity-0')}
+        />
+      </CommandItem>
+      {m.isCustom && (
+        <div className="hidden group-hover:flex">
+          <button
+            className="text-muted-foreground hover:text-red-500 cursor-pointer"
+            onClick={() => deleteCustomModel(m.value)}
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+      )}
+    </div>
+  )
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -96,40 +144,18 @@ export function SelectModel({
           />
           <CommandList>
             <CommandEmpty>未找到结果</CommandEmpty>
+            {serverItems.length > 0 && (
+              <CommandGroup heading="服务端模型（测试连接获取）">
+                {serverItems.map(renderItem)}
+              </CommandGroup>
+            )}
             <CommandGroup>
-              {filtered.map((m) => (
-                <div key={m.value} className="group flex">
-                  <CommandItem
-                    value={m.value}
-                    onSelect={(current) => {
-                      onChange?.(current === value ? '' : current)
-                      setSearchValue('')
-                      setOpen(false)
-                    }}
-                    className="flex-1"
-                  >
-                    {m.label}
-                    <Check
-                      className={cn('ml-auto', value === m.value ? 'opacity-100' : 'opacity-0')}
-                    />
-                  </CommandItem>
-                  {m.isCustom && (
-                    <div className="hidden group-hover:flex">
-                      <button
-                        className="text-gray-400 hover:text-red-500 cursor-pointer"
-                        onClick={() => deleteCustomModel(m.value)}
-                      >
-                        <X className="h-6 w-6" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+              {presetItems.map(renderItem)}
               {showCreate && (
                 <CommandItem
                   value={`create-${searchValue}`}
                   onSelect={() => addCustomModel(searchValue)}
-                  className="!text-blue-600"
+                  className="!text-primary"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   创建 “{searchValue}”

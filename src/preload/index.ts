@@ -54,7 +54,11 @@ const api = {
   setToolbarVisible: (visible: boolean) => ipcRenderer.invoke('setToolbarVisible', visible),
 
   // Settings the toolbar window needs, pushed from main (its own store is a separate copy)
-  onSyncToolbarSettings: (callback: (settings: { hoverDelay: number }) => void) => {
+  onSyncToolbarSettings: (callback: (settings: {
+    hoverDelay: number
+    themeId?: string
+    customThemeColors?: Record<string, string>
+  }) => void) => {
     ipcRenderer.on('sync-toolbar-settings', (_event, settings) => {
       callback(settings)
     })
@@ -97,6 +101,14 @@ const api = {
 
   // Stop solution stream
   stopSolutionStream: () => ipcRenderer.invoke('stopSolutionStream'),
+
+  // Test API connectivity (GET /models with the configured base URL and key)
+  testConnection: () =>
+    ipcRenderer.invoke('testConnection') as Promise<{
+      ok: boolean
+      models?: string[]
+      error?: string
+    }>,
 
   // Send follow-up question
   sendFollowUpQuestion: (question: string) => ipcRenderer.invoke('sendFollowUpQuestion', question),

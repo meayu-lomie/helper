@@ -6,6 +6,16 @@ ipcMain.handle('getAppSettings', () => {
 })
 
 ipcMain.handle('updateAppSettings', (_event, _settings) => {
+  // 渲染端会全量上报设置，主题/悬停延迟仅在真正变化时才转发给工具条，
+  // 否则两个窗口经主进程中转互相触发，形成无限推送循环
+  const hoverDelayChanged =
+    'toolbarHoverDelay' in _settings && _settings.toolbarHoverDelay !== settings.toolbarHoverDelay
+  const themeChanged =
+    ('themeId' in _settings && _settings.themeId !== settings.themeId) ||
+    ('customThemeColors' in _settings &&
+      JSON.stringify(_settings.customThemeColors ?? {}) !==
+        JSON.stringify(settings.customThemeColors ?? {}))
+
   Object.assign(settings, _settings)
   if ('hideDockIcon' in _settings) {
     applyDockVisibility(settings.hideDockIcon)
@@ -13,8 +23,13 @@ ipcMain.handle('updateAppSettings', (_event, _settings) => {
   if ('opacity' in _settings) {
     setToolbarOpacity(settings.opacity)
   }
-  if ('toolbarHoverDelay' in _settings) {
-    syncToolbarSettings(settings.toolbarHoverDelay)
+  if (hoverDelayChanged || themeChanged) {
+    syncToolbarSettings({
+      hoverDelay: settings.toolbarHoverDelay,
+      ...(themeChanged
+        ? { themeId: settings.themeId, customThemeColors: settings.customThemeColors }
+        : {})
+    })
   }
 })
 
@@ -57,7 +72,10 @@ export const settings = {
   dashscopeApiKey: '',
   hideDockIcon: false,
   audioInputDeviceId: '',
-  audioOutputDeviceId: ''
+  audioOutputDeviceId: '',
+  /** 渲染端主题设置的镜像，仅用于转发给悬浮工具条的独立窗口 */
+  themeId: 'vscode-dark',
+  customThemeColors: {}
 }
 
 export type AppSettings = typeof settings

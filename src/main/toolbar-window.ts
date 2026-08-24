@@ -119,9 +119,13 @@ export function setToolbarOpacity(opacity: number): void {
  * The toolbar lives in its own renderer, so it never sees the settings store
  * updates made in the main window; push the ones it needs over IPC instead.
  */
-export function syncToolbarSettings(hoverDelay: number): void {
+export function syncToolbarSettings(payload: {
+  hoverDelay: number
+  themeId?: string
+  customThemeColors?: Record<string, string>
+}): void {
   if (!toolbarWindow || toolbarWindow.isDestroyed()) return
-  toolbarWindow.webContents.send('sync-toolbar-settings', { hoverDelay })
+  toolbarWindow.webContents.send('sync-toolbar-settings', payload)
 }
 
 /** Reclaim the top spot alongside the main window, without ever revealing a hidden toolbar */
